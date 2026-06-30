@@ -135,8 +135,8 @@
             <span aria-hidden="true">▰</span>
           </button>
           <div class="gsi-layer-switcher__menu" role="menu" aria-label="地図の種類">
-            <button type="button" class="gsi-layer-switcher__item is-active" data-layer="pale" role="menuitem">淡色地図</button>
-            <button type="button" class="gsi-layer-switcher__item" data-layer="photo" role="menuitem">航空写真</button>
+            <button type="button" class="gsi-layer-switcher__item is-active" data-layer="pale" role="menuitem" aria-label="淡色地図">淡色<br>地図</button>
+            <button type="button" class="gsi-layer-switcher__item" data-layer="photo" role="menuitem" aria-label="航空写真">航空<br>写真</button>
           </div>`;
 
         L.DomEvent.disableClickPropagation(container);
