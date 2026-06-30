@@ -58,7 +58,6 @@
     currentBase = "pale";
 
     L.control.zoom({ position: "bottomright" }).addTo(map);
-    addLayerSwitcher();
 
     // クリックで標高
     map.on('click', async (e)=>{
@@ -128,49 +127,24 @@
     UI.toast("標高表示をクリアしました");
   }
 
-  function addLayerSwitcher(){
-    const LayerSwitcher = L.Control.extend({
-      options: { position: "bottomleft" },
-      onAdd: function(){
-        const container = L.DomUtil.create("div", "gsi-layer-switcher");
-        container.innerHTML = `
-          <button type="button" class="gsi-layer-switcher__toggle" aria-label="地図を選択" aria-haspopup="true">
-            <span aria-hidden="true">▰</span>
-          </button>
-          <div class="gsi-layer-switcher__menu" role="menu" aria-label="地図の種類">
-            <button type="button" class="gsi-layer-switcher__item is-active" data-layer="pale" role="menuitem" aria-label="淡色地図">淡色<br>地図</button>
-            <button type="button" class="gsi-layer-switcher__item" data-layer="photo" role="menuitem" aria-label="航空写真">航空<br>写真</button>
-          </div>`;
-
-        L.DomEvent.disableClickPropagation(container);
-        L.DomEvent.disableScrollPropagation(container);
-
-        container.querySelectorAll("[data-layer]").forEach((button)=>{
-          button.addEventListener("click", ()=>{
-            setBaseLayer(button.dataset.layer);
-          });
-        });
-
-        return container;
-      }
-    });
-
-    map.addControl(new LayerSwitcher());
-    syncLayerSwitcher();
+  function getBaseLayer(){
+    return currentBase;
   }
 
-  function syncLayerSwitcher(){
-    document.querySelectorAll(".gsi-layer-switcher__item").forEach((button)=>{
-      const isActive = button.dataset.layer === currentBase;
-      button.classList.toggle("is-active", isActive);
-      button.setAttribute("aria-pressed", String(isActive));
-    });
+  function getNextBaseLayerLabel(){
+    return currentBase === "photo" ? "淡色地図" : "航空写真";
+  }
+
+  function toggleBaseLayer(){
+    const next = currentBase === "photo" ? "pale" : "photo";
+    setBaseLayer(next);
+    return currentBase;
   }
 
   function setBaseLayer(key){
     if(!map) initMap();
     const next = (key === "photo") ? "photo" : "pale";
-    if(next === currentBase) return;
+    if(next === currentBase) return currentBase;
 
     const currentLayer = currentBase === "photo" ? layerPhoto : layerPale;
     try{ map.removeLayer(currentLayer); }catch(e){}
@@ -183,7 +157,7 @@
       UI.toast("淡色地図に切り替えました");
     }
     currentBase = next;
-    syncLayerSwitcher();
+    return currentBase;
   }
 
   async function exportImage(){
@@ -251,7 +225,10 @@
     setMeasure,
     isMeasureOn,
     clearMarkers,
+    getBaseLayer,
+    getNextBaseLayerLabel,
     setBaseLayer,
+    toggleBaseLayer,
     exportImage
   };
 })();

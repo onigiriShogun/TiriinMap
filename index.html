@@ -18,9 +18,22 @@
 
   <div id="controls" class="panel">
     <div class="btnrow">
-      <button class="btn" id="btnMeasure">標高計測START</button>
-      <button class="btn" id="btnClear">クリア</button>
-      <button class="btn" id="btnExport">画像出力</button>
+      <button class="btn" id="btnMeasure" type="button">
+        <span class="btn__icon btn__icon--measure" aria-hidden="true"></span>
+        <span class="btn__label">標高計測START</span>
+      </button>
+      <button class="btn" id="btnClear" type="button">
+        <span class="btn__icon btn__icon--clear" aria-hidden="true"></span>
+        <span class="btn__label">クリア</span>
+      </button>
+      <button class="btn" id="btnExport" type="button">
+        <span class="btn__icon btn__icon--export" aria-hidden="true"></span>
+        <span class="btn__label">画像出力</span>
+      </button>
+      <button class="btn" id="btnMapToggle" type="button" aria-live="polite">
+        <span class="btn__icon btn__icon--map" aria-hidden="true"></span>
+        <span class="btn__label">航空写真</span>
+      </button>
     </div>
     <div class="hint" id="hintLine">計測OFF：移動・拡大縮小のみ（計測ONでクリックすると標高）</div>
   </div>
