@@ -195,6 +195,15 @@ body.exporting .leaflet-control-zoom{
   font-family:var(--font);
 }
 
+.gsi-layer-switcher::before{
+  content:"";
+  position:absolute;
+  right:0;
+  bottom:44px;
+  width:146px;
+  height:12px;
+}
+
 .gsi-layer-switcher__toggle{
   display:grid;
   place-items:center;
