@@ -132,7 +132,7 @@
   }
 
   function getNextBaseLayerLabel(){
-    return currentBase === "photo" ? "淡色地図" : "航空写真";
+    return currentBase === "photo" ? "地図へ切替" : "写真へ切替";
   }
 
   function toggleBaseLayer(){
