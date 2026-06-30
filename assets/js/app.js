@@ -16,7 +16,7 @@
     if(!btn) return;
     const label = MapApp.getNextBaseLayerLabel();
     setButtonLabel(btn, label);
-    btn.setAttribute('aria-label', label + 'に切り替え');
+    btn.setAttribute('aria-label', label);
   }
 
   function syncMeasureButton(){
