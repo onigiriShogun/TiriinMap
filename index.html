@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>標高計測ツール</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <link rel="stylesheet" href="./assets/css/app.css" />
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <div id="controls" class="panel">
+    <div class="btnrow">
+      <button class="btn" id="btnMeasure">標高計測START</button>
+      <button class="btn" id="btnClear">クリア</button>
+      <button class="btn" id="btnExport">画像出力</button>
+    </div>
+    <div class="hint" id="hintLine">計測OFF：移動・拡大縮小のみ（計測ONでクリックすると標高）</div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="./assets/js/ui.js"></script>
+  <script src="./assets/js/elevation.js"></script>
+  <script src="./assets/js/map.js"></script>
+  <script src="./assets/js/app.js"></script>
+</body>
+</html>
