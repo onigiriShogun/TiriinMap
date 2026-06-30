@@ -25,6 +25,8 @@
       attributionControl: true,
       zoomSnap: 0.5,
       zoomDelta: 0.5,
+      // マウスホイール1ノッチあたりのズーム量を +/- ボタンと同じ0.5段階に揃える
+      wheelPxPerZoomLevel: 200,
       maxZoom: 21
     });
 
