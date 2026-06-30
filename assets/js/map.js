@@ -15,7 +15,7 @@
   // 初期表示座標
   const DEFAULT_LAT = 35.17113349632888;
   const DEFAULT_LON = 136.88352363391604;
-  const DEFAULT_ZOOM = 15; // 2段階広域（元17）
+  const DEFAULT_ZOOM = 14; // 3段階広域（元17）
 
   function initMap(){
     if(map) return map;
@@ -23,6 +23,8 @@
     map = L.map('map', {
       zoomControl: true,
       attributionControl: true,
+      zoomSnap: 0.5,
+      zoomDelta: 0.5,
       maxZoom: 21
     });
 
