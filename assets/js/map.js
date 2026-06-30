@@ -5,9 +5,9 @@
   let map = null;
 
   // base layers
+  let layerPale = null;
   let layerPhoto = null;
-  let layerStd = null;
-  let currentBase = "photo";
+  let currentBase = "pale";
 
   let measureOn = false;
   let markers = []; // {marker, label}
@@ -26,6 +26,18 @@
       maxZoom: 21
     });
 
+    // 淡色地図
+    layerPale = L.tileLayer(
+      "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
+      {
+        maxZoom: 21,
+        maxNativeZoom: 18,
+        minZoom: 2,
+        tileSize: 256,
+        attribution: "出典：国土地理院（地理院タイル）"
+      }
+    );
+
     // 航空写真
     layerPhoto = L.tileLayer(
       "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg",
@@ -38,20 +50,10 @@
       }
     );
 
-    // 標準地図
-    layerStd = L.tileLayer(
-      "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",
-      {
-        maxZoom: 21,          // 表示上の最大
-        maxNativeZoom: 18,    // タイルが存在する最大
-        minZoom: 2,
-        tileSize: 256,
-        attribution: "出典：国土地理院（地理院タイル）"
-      }
-    );
+    layerPale.addTo(map);
+    currentBase = "pale";
 
-    layerPhoto.addTo(map);
-    currentBase = "photo";
+    addLayerSwitcher();
 
     // クリックで標高
     map.on('click', async (e)=>{
@@ -121,25 +123,62 @@
     UI.toast("標高表示をクリアしました");
   }
 
+  function addLayerSwitcher(){
+    const LayerSwitcher = L.Control.extend({
+      options: { position: "bottomright" },
+      onAdd: function(){
+        const container = L.DomUtil.create("div", "gsi-layer-switcher");
+        container.innerHTML = `
+          <button type="button" class="gsi-layer-switcher__toggle" aria-label="地図を選択" aria-haspopup="true">
+            <span aria-hidden="true">▰</span>
+          </button>
+          <div class="gsi-layer-switcher__menu" role="menu" aria-label="地図の種類">
+            <button type="button" class="gsi-layer-switcher__item is-active" data-layer="pale" role="menuitem">淡色地図</button>
+            <button type="button" class="gsi-layer-switcher__item" data-layer="photo" role="menuitem">航空写真</button>
+          </div>`;
+
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
+
+        container.querySelectorAll("[data-layer]").forEach((button)=>{
+          button.addEventListener("click", ()=>{
+            setBaseLayer(button.dataset.layer);
+          });
+        });
+
+        return container;
+      }
+    });
+
+    map.addControl(new LayerSwitcher());
+    syncLayerSwitcher();
+  }
+
+  function syncLayerSwitcher(){
+    document.querySelectorAll(".gsi-layer-switcher__item").forEach((button)=>{
+      const isActive = button.dataset.layer === currentBase;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+  }
+
   function setBaseLayer(key){
     if(!map) initMap();
-    const next = (key === "std") ? "std" : "photo";
+    const next = (key === "photo") ? "photo" : "pale";
     if(next === currentBase) return;
 
-    if(currentBase === "photo"){
-      try{ map.removeLayer(layerPhoto); }catch(e){}
-    }else{
-      try{ map.removeLayer(layerStd); }catch(e){}
-    }
+    const currentLayer = currentBase === "photo" ? layerPhoto : layerPale;
+    try{ map.removeLayer(currentLayer); }catch(e){}
 
     if(next === "photo"){
       layerPhoto.addTo(map);
       UI.toast("航空写真に切り替えました");
     }else{
-      layerStd.addTo(map);
-      UI.toast("標準地図に切り替えました");
+      layerPale.addTo(map);
+      UI.toast("淡色地図に切り替えました");
     }
     currentBase = next;
+    syncLayerSwitcher();
   }
 
   async function exportImage(){
