@@ -2,16 +2,33 @@
 (function(){
   "use strict";
 
+  function setButtonLabel(button, text){
+    const label = button?.querySelector('.btn__label');
+    if(label){
+      label.textContent = text;
+    }else if(button){
+      button.textContent = text;
+    }
+  }
+
+  function syncMapToggleButton(){
+    const btn = document.getElementById('btnMapToggle');
+    if(!btn) return;
+    const label = MapApp.getNextBaseLayerLabel();
+    setButtonLabel(btn, label);
+    btn.setAttribute('aria-label', label + 'に切り替え');
+  }
+
   function syncMeasureButton(){
     const btn = document.getElementById('btnMeasure');
     const on = MapApp.isMeasureOn();
     if(on){
-      btn.textContent = "標高計測END";
+      setButtonLabel(btn, "標高計測END");
       btn.classList.remove('measure-off');
       btn.classList.add('measure-on');
       setHint("クリック地点の標高を地理院地図から取得します");
     }else{
-      btn.textContent = "標高計測START";
+      setButtonLabel(btn, "標高計測START");
       btn.classList.remove('measure-on');
       btn.classList.add('measure-off');
       setHint("クリック地点の標高を地理院地図から取得します");
@@ -40,8 +57,14 @@
       MapApp.exportImage();
     });
 
+    document.getElementById('btnMapToggle').addEventListener('click', ()=>{
+      MapApp.toggleBaseLayer();
+      syncMapToggleButton();
+    });
+
     MapApp.setMeasure(false);
     syncMeasureButton();
+    syncMapToggleButton();
   }
 
   if(document.readyState === 'loading'){
