@@ -21,7 +21,7 @@
     if(map) return map;
 
     map = L.map('map', {
-      zoomControl: true,
+      zoomControl: false,
       attributionControl: true,
       zoomSnap: 0.5,
       zoomDelta: 0.5,
@@ -57,6 +57,7 @@
     layerPale.addTo(map);
     currentBase = "pale";
 
+    L.control.zoom({ position: "bottomright" }).addTo(map);
     addLayerSwitcher();
 
     // クリックで標高
@@ -129,7 +130,7 @@
 
   function addLayerSwitcher(){
     const LayerSwitcher = L.Control.extend({
-      options: { position: "bottomright" },
+      options: { position: "bottomleft" },
       onAdd: function(){
         const container = L.DomUtil.create("div", "gsi-layer-switcher");
         container.innerHTML = `
