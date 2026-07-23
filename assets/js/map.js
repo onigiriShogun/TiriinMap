@@ -3,19 +3,57 @@
   "use strict";
 
   let map = null;
-
-  // base layers
   let layerPale = null;
   let layerPhoto = null;
   let currentBase = "pale";
-
   let measureOn = false;
   let markers = []; // {marker, label}
 
-  // 初期表示座標
   const DEFAULT_LAT = 35.17113349632888;
   const DEFAULT_LON = 136.88352363391604;
-  const DEFAULT_ZOOM = 14; // 3段階広域（元17）
+  const DEFAULT_ZOOM = 14;
+
+  function removeMarkerItem(item){
+    if(!map || !item) return;
+    try{ item.marker.closePopup(); }catch(e){}
+    try{ map.removeLayer(item.marker); }catch(e){}
+    try{ map.removeLayer(item.label); }catch(e){}
+    markers = markers.filter(current => current !== item);
+    UI.toast("選択した標高点を削除しました");
+  }
+
+  function bindDeletePopup(item, elevationText){
+    const popup = L.popup({
+      closeButton: true,
+      className: "elev-delete-popup",
+      offset: [0, -8]
+    }).setContent(
+      '<div class="elev-delete-popup__value">' + elevationText + '</div>' +
+      '<button type="button" class="elev-delete-popup__button">この点を削除</button>'
+    );
+
+    item.marker.bindPopup(popup);
+
+    item.marker.on('click', (event)=>{
+      if(event?.originalEvent){
+        L.DomEvent.stopPropagation(event.originalEvent);
+      }
+    });
+
+    item.marker.on('popupopen', (event)=>{
+      const popupElement = event.popup.getElement();
+      const deleteButton = popupElement?.querySelector('.elev-delete-popup__button');
+      if(!deleteButton) return;
+
+      L.DomEvent.disableClickPropagation(popupElement);
+      L.DomEvent.disableScrollPropagation(popupElement);
+
+      deleteButton.addEventListener('click', (buttonEvent)=>{
+        L.DomEvent.stop(buttonEvent);
+        removeMarkerItem(item);
+      }, {once:true});
+    });
+  }
 
   function initMap(){
     if(map) return map;
@@ -25,12 +63,10 @@
       attributionControl: true,
       zoomSnap: 0.5,
       zoomDelta: 0.5,
-      // マウスホイール1ノッチあたりのズーム量を +/- ボタンと同じ0.5段階に揃える
       wheelPxPerZoomLevel: 200,
       maxZoom: 21
     });
 
-    // 淡色地図
     layerPale = L.tileLayer(
       "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
       {
@@ -42,12 +78,11 @@
       }
     );
 
-    // 航空写真
     layerPhoto = L.tileLayer(
       "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg",
       {
-        maxZoom: 21,          // 表示上の最大
-        maxNativeZoom: 18,    // タイルが存在する最大
+        maxZoom: 21,
+        maxNativeZoom: 18,
         minZoom: 2,
         tileSize: 256,
         attribution: "出典：国土地理院（地理院タイル）"
@@ -56,10 +91,8 @@
 
     layerPale.addTo(map);
     currentBase = "pale";
-
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
-    // クリックで標高
     map.on('click', async (e)=>{
       if(!measureOn) return;
 
@@ -72,27 +105,31 @@
           UI.toast("標高が取得できませんでした（N/A）");
           return;
         }
+
         const txt = UI.format2NoRound(elev) + " m";
-
-        // dot
         const dotIcon = L.divIcon({
-          className: "",
+          className: "elev-marker-hitarea",
           html: '<div class="elev-dot"></div>',
-          iconSize: [14,14],
-          iconAnchor: [7,7]
+          iconSize: [36,36],
+          iconAnchor: [18,18]
         });
-        const m = L.marker([lat, lon], {icon: dotIcon}).addTo(map);
+        const marker = L.marker([lat, lon], {
+          icon: dotIcon,
+          keyboard: true,
+          title: txt + "。クリックで削除メニューを表示"
+        }).addTo(map);
 
-        // label
         const labelIcon = L.divIcon({
           className: "",
           html: '<div class="elev-label">' + txt + '</div>',
           iconSize: [0,0],
           iconAnchor: [-6, 22]
         });
-        const lab = L.marker([lat, lon], {icon: labelIcon, interactive:false}).addTo(map);
+        const label = L.marker([lat, lon], {icon: labelIcon, interactive:false}).addTo(map);
 
-        markers.push({marker:m, label:lab});
+        const item = {marker, label};
+        markers.push(item);
+        bindDeletePopup(item, txt);
       }catch(err){
         UI.toast(String(err?.message || err), 4500);
       }
@@ -119,9 +156,10 @@
 
   function clearMarkers(){
     if(!map) return;
-    for(const it of markers){
-      try{ map.removeLayer(it.marker); }catch(e){}
-      try{ map.removeLayer(it.label); }catch(e){}
+    for(const item of markers){
+      try{ item.marker.closePopup(); }catch(e){}
+      try{ map.removeLayer(item.marker); }catch(e){}
+      try{ map.removeLayer(item.label); }catch(e){}
     }
     markers = [];
     UI.toast("標高表示をクリアしました");
@@ -163,27 +201,21 @@
   async function exportImage(){
     const mapEl = document.getElementById('map');
     UI.toast("画像準備中...", 2000);
-
-    // 画像出力時はUI（各種ボタン等）を一時的に非表示にする
     const bodyEl = document.body;
     bodyEl.classList.add('exporting');
 
     try{
-      // CSS反映を待ってからキャプチャ
-      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const canvas = await html2canvas(mapEl, {
         useCORS:true,
         allowTaint:false,
         backgroundColor:"#ffffff"
       });
-
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       const ts = new Date();
       const timestamp = `${ts.getFullYear()}${String(ts.getMonth()+1).padStart(2,'0')}${String(ts.getDate()).padStart(2,'0')}_${String(ts.getHours()).padStart(2,'0')}${String(ts.getMinutes()).padStart(2,'0')}${String(ts.getSeconds()).padStart(2,'0')}`;
       const defaultName = `地理院地図標高_${timestamp}.png`;
 
-      // 保存先指定 (File System Access API)
       if ('showSaveFilePicker' in window) {
         try {
           const handle = await window.showSaveFilePicker({
@@ -201,7 +233,6 @@
           if (err.name !== 'AbortError') throw err;
         }
       } else {
-        // Fallback: ダウンロード
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
