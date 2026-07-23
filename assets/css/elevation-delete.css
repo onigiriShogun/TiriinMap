@@ -1,0 +1,52 @@
+/* 標高点の任意削除UI */
+.elev-marker-hitarea{
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  border:none;
+}
+
+.elev-marker-hitarea:focus{
+  outline:3px solid rgba(225,29,72,.3);
+  border-radius:50%;
+}
+
+.elev-delete-popup .leaflet-popup-content{
+  margin:12px 14px;
+  min-width:132px;
+  text-align:center;
+}
+
+.elev-delete-popup__value{
+  margin-bottom:9px;
+  color:#111827;
+  font-weight:800;
+  font-size:14px;
+}
+
+.elev-delete-popup__button{
+  width:100%;
+  min-height:38px;
+  border:0;
+  border-radius:9px;
+  padding:8px 12px;
+  background:#be123c;
+  color:#fff;
+  font:700 13px/1.2 var(--font);
+  cursor:pointer;
+  touch-action:manipulation;
+}
+
+.elev-delete-popup__button:hover{
+  background:#9f1239;
+}
+
+.elev-delete-popup__button:focus-visible{
+  outline:3px solid rgba(190,18,60,.28);
+  outline-offset:2px;
+}
+
+body.exporting .elev-delete-popup{
+  display:none !important;
+}
