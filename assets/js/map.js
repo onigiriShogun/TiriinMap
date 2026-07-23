@@ -6,12 +6,21 @@
   let layerPale = null;
   let layerPhoto = null;
   let currentBase = "pale";
-  let measureOn = false;
   let markers = []; // {marker, label}
+  let suppressMeasureUntil = 0;
 
   const DEFAULT_LAT = 35.17113349632888;
   const DEFAULT_LON = 136.88352363391604;
   const DEFAULT_ZOOM = 14;
+  const GESTURE_SUPPRESS_MS = 300;
+
+  function suppressMeasurementBriefly(){
+    suppressMeasureUntil = Date.now() + GESTURE_SUPPRESS_MS;
+  }
+
+  function isMeasurementSuppressed(){
+    return Date.now() < suppressMeasureUntil;
+  }
 
   function removeMarkerItem(item){
     if(!map || !item) return;
@@ -93,8 +102,14 @@
     currentBase = "pale";
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
+    map.on('dragstart zoomstart movestart', suppressMeasurementBriefly);
+    map.on('dragend zoomend moveend', suppressMeasurementBriefly);
+
     map.on('click', async (e)=>{
-      if(!measureOn) return;
+      if(isMeasurementSuppressed()) return;
+
+      const originalTarget = e?.originalEvent?.target;
+      if(originalTarget?.closest?.('.leaflet-control, .leaflet-popup, #controls')) return;
 
       const lat = e.latlng.lat;
       const lon = e.latlng.lng;
@@ -136,22 +151,12 @@
     });
 
     map.setView([DEFAULT_LAT, DEFAULT_LON], DEFAULT_ZOOM);
-    setMeasure(false);
 
     window.addEventListener('resize', ()=>{
       try{ map.invalidateSize(true); }catch(e){}
     });
 
     return map;
-  }
-
-  function setMeasure(on){
-    measureOn = !!on;
-    return measureOn;
-  }
-
-  function isMeasureOn(){
-    return measureOn;
   }
 
   function clearMarkers(){
@@ -162,7 +167,7 @@
       try{ map.removeLayer(item.label); }catch(e){}
     }
     markers = [];
-    UI.toast("標高表示をクリアしました");
+    UI.toast("標高表示を全クリアしました");
   }
 
   function getBaseLayer(){
@@ -253,8 +258,6 @@
 
   window.MapApp = {
     initMap,
-    setMeasure,
-    isMeasureOn,
     clearMarkers,
     getBaseLayer,
     getNextBaseLayerLabel,
